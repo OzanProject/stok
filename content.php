@@ -116,6 +116,11 @@ else {
 		// panggil file form ubah user
 		include "modules/user/form_ubah.php";
 	}
+	// jika module yang dipilih "backup_restore" dan hak akses "Administrator"
+	elseif ($_GET['module'] == 'backup_restore' && $_SESSION['hak_akses'] == 'Administrator') {
+		// panggil file tampil data backup_restore
+		include "modules/backup_restore/tampil_data.php";
+	}
 	// jika module yang dipilih "permintaan" 
 	elseif ($_GET['module'] == 'permintaan') {
 		// panggil file tampil data permintaan

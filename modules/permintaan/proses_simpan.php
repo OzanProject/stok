@@ -16,22 +16,41 @@ else {
     if (isset($_POST['simpan'])) {
         // ambil data hasil submit dari form
         $tanggal       = mysqli_real_escape_string($mysqli, trim($_POST['tanggal']));
-        $barang        = mysqli_real_escape_string($mysqli, $_POST['barang']);
-        $jumlah        = str_replace('.', '', mysqli_real_escape_string($mysqli, $_POST['jumlah']));
         $id_user       = $_SESSION['id_user']; // dari session login
 
         // ubah format tanggal menjadi Tahun-Bulan-Hari (Y-m-d) sebelum disimpan ke database
         $tanggal_permintaan = date('Y-m-d', strtotime($tanggal));
 
-        // sql statement untuk insert data ke tabel "tbl_permintaan"
-        $insert = mysqli_query($mysqli, "INSERT INTO tbl_permintaan(tanggal, id_user, barang, jumlah, status) 
-                                        VALUES('$tanggal_permintaan', '$id_user', '$barang', '$jumlah', 'Pending')")
-                                        or die('Ada kesalahan pada query insert : ' . mysqli_error($mysqli));
-        // cek query
-        // jika proses insert berhasil
-        if ($insert) {
-            // alihkan ke halaman permintaan dan tampilkan pesan berhasil simpan data
-            header('location: ../../main.php?module=permintaan&pesan=1');
+        // buat kode_permintaan unik, misalnya 'PR-' + timestamp
+        $kode_permintaan = 'PR-' . time();
+
+        $barang_array = $_POST['barang'];
+        $jumlah_array = $_POST['jumlah'];
+
+        if (!empty($barang_array)) {
+            $berhasil = true;
+            for ($i = 0; $i < count($barang_array); $i++) {
+                $barang = mysqli_real_escape_string($mysqli, $barang_array[$i]);
+                $jumlah = str_replace('.', '', mysqli_real_escape_string($mysqli, $jumlah_array[$i]));
+                
+                // sql statement untuk insert data ke tabel "tbl_permintaan"
+                $insert = mysqli_query($mysqli, "INSERT INTO tbl_permintaan(kode_permintaan, tanggal, id_user, barang, jumlah, status) 
+                                                VALUES('$kode_permintaan', '$tanggal_permintaan', '$id_user', '$barang', '$jumlah', 'Pending')")
+                                                or die('Ada kesalahan pada query insert : ' . mysqli_error($mysqli));
+                if (!$insert) {
+                    $berhasil = false;
+                }
+            }
+
+            // cek query
+            // jika proses insert berhasil
+            if ($berhasil) {
+                // alihkan ke halaman permintaan dan tampilkan pesan berhasil simpan data
+                header('location: ../../main.php?module=permintaan&pesan=1');
+            }
+        } else {
+             // jika keranjang kosong
+             header('location: ../../main.php?module=form_entri_permintaan');
         }
     }
 }

@@ -374,6 +374,25 @@ else {
 		<?php
 		}
 
+		// jika menu backup & restore dipilih
+		if ($_GET['module'] == 'backup_restore') { ?>
+			<li class="nav-item active">
+				<a href="?module=backup_restore">
+					<i class="fas fa-database"></i>
+					<p>Backup & Restore</p>
+				</a>
+			</li>
+		<?php
+		} else { ?>
+			<li class="nav-item">
+				<a href="?module=backup_restore">
+					<i class="fas fa-database"></i>
+					<p>Backup & Restore</p>
+				</a>
+			</li>
+		<?php
+		}
+
 		// jika menu tentang aplikasi dipilih, menu tentang aplikasi aktif
 		if ($_GET['module'] == 'tentang') { ?>
 			<li class="nav-section">

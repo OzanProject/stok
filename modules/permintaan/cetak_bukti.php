@@ -6,19 +6,23 @@ if (empty($_SESSION['username']) && empty($_SESSION['password'])) {
 } else {
     require_once "../../config/database.php";
     
-    if (isset($_GET['id'])) {
-        $id_permintaan = mysqli_real_escape_string($mysqli, $_GET['id']);
+    if (isset($_GET['kode'])) {
+        $kode_permintaan = mysqli_real_escape_string($mysqli, $_GET['kode']);
         
         $query = mysqli_query($mysqli, "SELECT a.id_permintaan, a.tanggal, a.jumlah, a.status, b.nama_barang, b.id_barang, c.nama_satuan, u.nama_user 
                                         FROM tbl_permintaan as a 
                                         INNER JOIN tbl_barang as b ON a.barang = b.id_barang 
                                         INNER JOIN tbl_satuan as c ON b.satuan = c.id_satuan
                                         INNER JOIN tbl_user as u ON a.id_user = u.id_user
-                                        WHERE a.id_permintaan='$id_permintaan' AND a.status='ACC'")
+                                        WHERE a.kode_permintaan='$kode_permintaan' AND a.status='ACC'")
                                         or die('Ada kesalahan pada query : ' . mysqli_error($mysqli));
         
         if (mysqli_num_rows($query) > 0) {
-            $data = mysqli_fetch_assoc($query);
+            $items = [];
+            while($data = mysqli_fetch_assoc($query)) {
+                $items[] = $data;
+            }
+            $info_umum = $items[0]; // Ambil data umum dari item pertama
         } else {
             echo "Data tidak ditemukan atau belum di-ACC.";
             exit;
@@ -55,27 +59,31 @@ if (empty($_SESSION['username']) && empty($_SESSION['password'])) {
         
         <div class="content">
             <p>Telah diberikan kepada:</p>
-            <p><strong>Nama Peminta :</strong> <?php echo $data['nama_user']; ?></p>
-            <p><strong>Tanggal Keluar :</strong> <?php echo date('d-m-Y', strtotime($data['tanggal'])); ?></p>
+            <p><strong>Nama Peminta :</strong> <?php echo $info_umum['nama_user']; ?></p>
+            <p><strong>Tanggal Keluar :</strong> <?php echo date('d-m-Y', strtotime($info_umum['tanggal'])); ?></p>
             
             <table>
                 <thead>
                     <tr>
-                        <th width="5%">No.</th>
+                        <th width="5%" style="text-align:center;">No.</th>
                         <th width="20%">Kode Barang</th>
                         <th width="45%">Nama Barang</th>
-                        <th width="15%">Jumlah</th>
+                        <th width="15%" style="text-align:center;">Jumlah</th>
                         <th width="15%">Satuan</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <?php 
+                    $no = 1;
+                    foreach($items as $row) { ?>
                     <tr>
-                        <td style="text-align: center;">1</td>
-                        <td><?php echo $data['id_barang']; ?></td>
-                        <td><?php echo $data['nama_barang']; ?></td>
-                        <td style="text-align: center;"><?php echo $data['jumlah']; ?></td>
-                        <td><?php echo $data['nama_satuan']; ?></td>
+                        <td style="text-align: center;"><?php echo $no++; ?></td>
+                        <td><?php echo $row['id_barang']; ?></td>
+                        <td><?php echo $row['nama_barang']; ?></td>
+                        <td style="text-align: center;"><?php echo $row['jumlah']; ?></td>
+                        <td><?php echo $row['nama_satuan']; ?></td>
                     </tr>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>
@@ -84,7 +92,7 @@ if (empty($_SESSION['username']) && empty($_SESSION['password'])) {
             <div class="signature">
                 <p>Pemohon,</p>
                 <br>
-                <strong>( <?php echo $data['nama_user']; ?> )</strong>
+                <strong>( <?php echo $info_umum['nama_user']; ?> )</strong>
             </div>
             <div class="signature">
                 <p>Pengurus Barang,</p>

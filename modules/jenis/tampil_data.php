@@ -72,6 +72,33 @@ else {
                         </button>
                     </div>';
         }
+		// jika pesan = 10 (bulk delete)
+		elseif ($_GET['pesan'] == 10) {
+            $berhasil = $_GET['berhasil'] ?? 0;
+            $gagal = $_GET['gagal'] ?? 0;
+            $msg = "$berhasil data berhasil dihapus.";
+            if ($gagal > 0) {
+                $msg .= " $gagal data gagal dihapus karena sudah tercatat pada Data Barang.";
+                $type = "alert-warning";
+                $title = "Peringatan!";
+                $icon = "fas fa-exclamation-triangle";
+                $text_color = "text-warning";
+            } else {
+                $type = "alert-success";
+                $title = "Sukses!";
+                $icon = "fas fa-check";
+                $text_color = "text-success";
+            }
+
+			echo '  <div class="alert alert-notify '.$type.' alert-dismissible fade show" role="alert">
+                        <span data-notify="icon" class="'.$icon.'"></span> 
+                        <span data-notify="title" class="'.$text_color.'">'.$title.'</span> 
+                        <span data-notify="message">'.$msg.'</span>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>';
+		}
     }
 ?>
     <div class="panel-header bg-secondary-gradient">
@@ -110,11 +137,18 @@ else {
                 <div class="card-title">Data Jenis Barang</div>
             </div>
             <div class="card-body">
+                <form id="formHapusBanyak" action="modules/jenis/proses_hapus_banyak.php" method="POST">
+                    <div class="mb-3">
+                        <button type="button" id="btnHapusBanyak" class="btn btn-danger btn-round btn-sm">
+                            <i class="fas fa-trash mr-2"></i> Hapus Terpilih
+                        </button>
+                    </div>
                 <div class="table-responsive">
                     <!-- tabel untuk menampilkan data dari database -->
                     <table id="basic-datatables" class="display table table-bordered table-striped table-hover">
                         <thead>
                             <tr>
+                                <th width="20" class="text-center" data-orderable="false"><input type="checkbox" id="checkAll"></th>
                                 <th class="text-center">No.</th>
                                 <th class="text-center">Jenis Barang</th>
                                 <th class="text-center">Aksi</th>
@@ -131,6 +165,7 @@ else {
                             while ($data = mysqli_fetch_assoc($query)) { ?>
                                 <!-- tampilkan data -->
                                 <tr>
+                                    <td width="20" class="text-center"><input type="checkbox" name="id[]" class="checkItem" value="<?php echo $data['id_jenis']; ?>"></td>
                                     <td width="30" class="text-center"><?php echo $no++; ?></td>
                                     <td width="300"><?php echo $data['nama_jenis']; ?></td>
                                     <td width="70" class="text-center">
@@ -150,7 +185,34 @@ else {
                         </tbody>
                     </table>
                 </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#checkAll').click(function() {
+                $('.checkItem').prop('checked', this.checked);
+            });
+
+            $('.checkItem').click(function() {
+                if ($('.checkItem:checked').length == $('.checkItem').length) {
+                    $('#checkAll').prop('checked', true);
+                } else {
+                    $('#checkAll').prop('checked', false);
+                }
+            });
+
+            $('#btnHapusBanyak').click(function() {
+                if ($('.checkItem:checked').length == 0) {
+                    alert('Silakan pilih data yang ingin dihapus terlebih dahulu!');
+                } else {
+                    if (confirm('Anda yakin ingin menghapus ' + $('.checkItem:checked').length + ' data terpilih?')) {
+                        $('#formHapusBanyak').submit();
+                    }
+                }
+            });
+        });
+    </script>
 <?php } ?>

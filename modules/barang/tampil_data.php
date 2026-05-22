@@ -58,6 +58,33 @@ else {
                         </button>
                     </div>';
         }
+		// jika pesan = 10 (bulk delete)
+		elseif ($_GET['pesan'] == 10) {
+            $berhasil = $_GET['berhasil'] ?? 0;
+            $gagal = $_GET['gagal'] ?? 0;
+            $msg = "$berhasil data berhasil dihapus.";
+            if ($gagal > 0) {
+                $msg .= " $gagal data gagal dihapus karena sudah tercatat pada Data Transaksi.";
+                $type = "alert-warning";
+                $title = "Peringatan!";
+                $icon = "fas fa-exclamation-triangle";
+                $text_color = "text-warning";
+            } else {
+                $type = "alert-success";
+                $title = "Sukses!";
+                $icon = "fas fa-check";
+                $text_color = "text-success";
+            }
+
+			echo '  <div class="alert alert-notify '.$type.' alert-dismissible fade show" role="alert">
+                        <span data-notify="icon" class="'.$icon.'"></span> 
+                        <span data-notify="title" class="'.$text_color.'">'.$title.'</span> 
+                        <span data-notify="message">'.$msg.'</span>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>';
+		}
     }
 ?>
     <div class="panel-header bg-secondary-gradient">
@@ -92,12 +119,20 @@ else {
                 <div class="card-title">Data Barang</div>
             </div>
             <div class="card-body">
+                <form id="formHapusBanyak" action="modules/barang/proses_hapus_banyak.php" method="POST">
+                    <div class="mb-3">
+                        <button type="button" id="btnHapusBanyak" class="btn btn-danger btn-round btn-sm">
+                            <i class="fas fa-trash mr-2"></i> Hapus Terpilih
+                        </button>
+                    </div>
                 <div class="table-responsive">
                     <!-- tabel untuk menampilkan data dari database -->
                     <table id="basic-datatables" class="display table table-bordered table-striped table-hover">
                         <thead>
                             <tr>
+                                <th width="20" class="text-center" data-orderable="false"><input type="checkbox" id="checkAll"></th>
                                 <th class="text-center">No.</th>
+                                <th class="text-center">Foto</th>
                                 <th class="text-center">ID Barang</th>
                                 <th class="text-center">Nama Barang</th>
                                 <th class="text-center">Stok</th>
@@ -110,15 +145,19 @@ else {
                             // variabel untuk nomor urut tabel
                             $no = 1;
                             // sql statement untuk menampilkan data dari tabel "tbl_barang" dan tabel "tbl_satuan"
-                            $query = mysqli_query($mysqli, "SELECT a.id_barang, a.nama_barang, a.stok, a.satuan, b.nama_satuan
+                            $query = mysqli_query($mysqli, "SELECT a.id_barang, a.nama_barang, a.stok, a.satuan, a.foto, b.nama_satuan
                                                             FROM tbl_barang as a INNER JOIN tbl_satuan as b ON a.satuan=b.id_satuan 
                                                             ORDER BY a.id_barang DESC")
                                                             or die('Ada kesalahan pada query tampil data : ' . mysqli_error($mysqli));
                             // ambil data hasil query
-                            while ($data = mysqli_fetch_assoc($query)) { ?>
+                            while ($data = mysqli_fetch_assoc($query)) { 
+                                $foto = $data['foto'] ? $data['foto'] : 'no_image.png';
+                            ?>
                                 <!-- tampilkan data -->
                                 <tr>
+                                    <td width="20" class="text-center"><input type="checkbox" name="id[]" class="checkItem" value="<?php echo $data['id_barang']; ?>"></td>
                                     <td width="50" class="text-center"><?php echo $no++; ?></td>
+                                    <td width="60" class="text-center"><img src="images/<?php echo $foto; ?>" alt="Foto Barang" style="height: 40px; border-radius: 4px;"></td>
                                     <td width="100" class="text-center"><?php echo $data['id_barang']; ?></td>
                                     <td width="200"><?php echo $data['nama_barang']; ?></td>
                                     <td width="80" class="text-right"><?php echo $data['stok']; ?></td>
@@ -144,7 +183,34 @@ else {
                         </tbody>
                     </table>
                 </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#checkAll').click(function() {
+                $('.checkItem').prop('checked', this.checked);
+            });
+
+            $('.checkItem').click(function() {
+                if ($('.checkItem:checked').length == $('.checkItem').length) {
+                    $('#checkAll').prop('checked', true);
+                } else {
+                    $('#checkAll').prop('checked', false);
+                }
+            });
+
+            $('#btnHapusBanyak').click(function() {
+                if ($('.checkItem:checked').length == 0) {
+                    alert('Silakan pilih data yang ingin dihapus terlebih dahulu!');
+                } else {
+                    if (confirm('Anda yakin ingin menghapus ' + $('.checkItem:checked').length + ' data terpilih?')) {
+                        $('#formHapusBanyak').submit();
+                    }
+                }
+            });
+        });
+    </script>
 <?php } ?>
